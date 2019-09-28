@@ -10,9 +10,16 @@ namespace SignalR30SensorClient
         static async Task Main(string[] args)
         {
             var hubConnectionBuilder = new HubConnectionBuilder()
-                .WithUrl("https://localhost:5001/sensors");
+                .WithUrl("http://localhost:5000/sensors")
+                .WithAutomaticReconnect();
 
             await using var hubConnection = hubConnectionBuilder.Build();
+
+            hubConnection.Reconnected += async connectionId =>
+            {
+                await hubConnection.SendAsync("PublishSensorData", args.Length == 0 ? "x" : args[0], GenerateSensorData());
+            };
+
             await hubConnection.StartAsync();
 
             await hubConnection.SendAsync("PublishSensorData", args.Length == 0 ? "x" : args[0], GenerateSensorData());
